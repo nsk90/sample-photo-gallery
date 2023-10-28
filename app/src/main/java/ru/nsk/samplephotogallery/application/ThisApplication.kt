@@ -1,0 +1,10 @@
+package ru.nsk.samplephotogallery.application
+
+import android.app.Application
+
+class ThisApplication : Application() {
+
+    override fun onCreate() {
+        super.onCreate()
+    }
+}

@@ -3,4 +3,8 @@
     <string name="preview">Preview</string>
     <string name="sample_photo_gallery">Sample Photo Gallery</string>
     <string name="take_picture">Take a picture</string>
+    <string name="camera_permission_granted">Camera permission Granted</string>
+    <string name="please_grant_camera_permission_rationale">Please grant camera permission.</string>
+    <string name="camera_permission_required">Camera permission required for this feature to be available</string>
+    <string name="request_camera_permission">Request camera permission</string>
 </resources>
