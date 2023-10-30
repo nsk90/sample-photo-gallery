@@ -51,6 +51,7 @@ dependencies {
 
     implementation(libs.core.ktx)
     implementation(libs.lifecycle.runtime.ktx)
+    implementation(libs.lifecycle.runtime.compose)
     implementation(libs.activity.compose)
     implementation(platform(libs.compose.bom))
     implementation(libs.ui)
@@ -61,6 +62,7 @@ dependencies {
     implementation(libs.androidx.camera.view)
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.extensions)
+    implementation(libs.androidx.compose.navigation)
     implementation(libs.google.accompanist.permissions)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)

@@ -1,75 +1,90 @@
 package ru.nsk.samplephotogallery.ui.mainactivity
 
 import android.content.res.Configuration
-import android.graphics.Color
+import android.graphics.Color.GREEN
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.LinearLayout
-import androidx.camera.view.CameraController
 import androidx.camera.view.PreviewView
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.google.accompanist.permissions.shouldShowRationale
+import kotlinx.coroutines.GlobalScope
 import ru.nsk.samplephotogallery.R
-import ru.nsk.samplephotogallery.architecture.mvi.MviModel
 import ru.nsk.samplephotogallery.ui.theme.SamplePhotoGalleryTheme
 
 @Composable
-fun MainComposableView(viewModel: IMainViewModel, modifier: Modifier = Modifier) {
-    val state by viewModel.model.stateFlow.collectAsState()
+fun MainComposableView(viewModel: IMainViewModel, modifier: Modifier = Modifier, askPermissions: Boolean = true) {
+    val state by viewModel.model.stateFlow.collectAsStateWithLifecycle()
+    val navController = rememberNavController()
+
     Column(modifier = modifier) {
         Text(
             text = stringResource(R.string.sample_photo_gallery),
             style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.align(CenterHorizontally)
-        )
-        CameraPermission(modifier = Modifier.align(CenterHorizontally))
-        CameraPreview(
-            viewModel = viewModel,
-            Modifier
-                .align(CenterHorizontally)
-                .fillMaxWidth()
-                .height(Dp(300F))
-        )
-        Image(
-            painter = painterResource(id = R.drawable.ic_launcher_background),
-            contentDescription = stringResource(R.string.preview),
             modifier = Modifier
                 .align(CenterHorizontally)
-                .size(Dp(150F)),
+                .wrapContentSize()
         )
+        if (askPermissions)
+            CameraPermission(modifier = Modifier.align(CenterHorizontally))
+        Box(
+            contentAlignment = Alignment.BottomStart,
+            modifier = Modifier
+                .fillMaxSize()
+                .weight(1f)
+        ) {
+            CameraPreview(Modifier.matchParentSize()) {
+                viewModel.onPreviewInflated(it)
+            }
+            Image(
+                painter = painterResource(id = R.drawable.ic_launcher_background),
+                contentDescription = stringResource(R.string.preview),
+                modifier = Modifier
+                    .offset((20).dp, (-20).dp)
+                    .size(Dp(100F))
+                    .clickable { viewModel.onPreviewClicked() }
+            )
+        }
         TakePictureButton(
-            viewModel = viewModel,
-            modifier = Modifier.align(CenterHorizontally),
-        )
+            modifier = Modifier
+                .align(CenterHorizontally)
+                .wrapContentSize()
+        ) {
+            viewModel.takePicture()
+        }
     }
 }
 
 @Composable
-fun TakePictureButton(viewModel: IMainViewModel, modifier: Modifier = Modifier) {
+fun TakePictureButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
     Button(
-        onClick = { viewModel.takePicture() },
+        onClick = onClick,
         modifier = modifier,
     ) {
         Text(
@@ -79,15 +94,14 @@ fun TakePictureButton(viewModel: IMainViewModel, modifier: Modifier = Modifier) 
 }
 
 @Composable
-fun CameraPreview(viewModel: IMainViewModel, modifier: Modifier = Modifier) {
+fun CameraPreview(modifier: Modifier = Modifier, onPreviewInflated: (PreviewView) -> Unit) {
     AndroidView(
         factory = { context ->
             PreviewView(context).apply {
-                setBackgroundColor(Color.GREEN)
+                setBackgroundColor(GREEN)
                 layoutParams = LinearLayout.LayoutParams(MATCH_PARENT, MATCH_PARENT)
-                scaleType = PreviewView.ScaleType.FIT_CENTER
-                controller = viewModel.cameraController
-                implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+                scaleType = PreviewView.ScaleType.FILL_CENTER
+                onPreviewInflated(this)
             }
         },
         modifier = modifier,
@@ -128,19 +142,18 @@ private fun CameraPermission(modifier: Modifier = Modifier) {
     showBackground = true,
 )
 @Composable
-fun GreetingPreview() {
+private fun GreetingPreview() {
     SamplePhotoGalleryTheme {
         Surface(modifier = Modifier/*.fillMaxSize()*/, color = MaterialTheme.colorScheme.background) {
-            MainComposableView(object : IMainViewModel {
-                override val model: MviModel<MainState>
-                    get() = TODO("Not yet implemented")
-                override val cameraController: CameraController
-                    get() = TODO("Not yet implemented")
-
-                override fun takePicture() {
-                    TODO("Not yet implemented")
-                }
-            })
+            MainComposableView(
+                object : IMainViewModel {
+                    override val model = model(GlobalScope, MainState(42))
+                    override fun takePicture() = Unit
+                    override fun onPreviewInflated(view: PreviewView) = Unit
+                    override fun onPreviewClicked() = Unit
+                },
+                askPermissions = false,
+            )
         }
     }
 }

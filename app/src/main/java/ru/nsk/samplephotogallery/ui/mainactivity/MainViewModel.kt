@@ -9,6 +9,7 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
+import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -22,8 +23,9 @@ import ru.nsk.samplephotogallery.tools.log.toastException
 data class MainState(val preview: Int)
 
 interface IMainViewModel : MviModelHost<MainState> {
-    val cameraController: CameraController
     fun takePicture()
+    fun onPreviewInflated(view: PreviewView)
+    fun onPreviewClicked()
 }
 
 class MainViewModel(context: Context) : IMainViewModel, ViewModel(), DefaultLifecycleObserver {
@@ -31,7 +33,7 @@ class MainViewModel(context: Context) : IMainViewModel, ViewModel(), DefaultLife
 
     @SuppressLint("StaticFieldLeak")
     private val context = context.applicationContext
-    override val cameraController = LifecycleCameraController(context.applicationContext)
+    private val cameraController = LifecycleCameraController(context.applicationContext)
 
     init {
         log { "init" }
@@ -62,5 +64,14 @@ class MainViewModel(context: Context) : IMainViewModel, ViewModel(), DefaultLife
                 }
             }
         )
+    }
+
+    override fun onPreviewInflated(view: PreviewView) {
+        view.controller = cameraController
+        log { "onPreviewInflated" }
+    }
+
+    override fun onPreviewClicked() {
+        // todo
     }
 }

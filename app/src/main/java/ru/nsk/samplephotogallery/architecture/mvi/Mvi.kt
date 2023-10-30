@@ -7,7 +7,7 @@ import kotlinx.coroutines.launch
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
 
-class MviModel<State>(val scope: CoroutineScope, initialState: State) {
+class MviModel<State : Any>(val scope: CoroutineScope, initialState: State) {
     private val _stateFlow = MutableStateFlow(initialState)
     val stateFlow = _stateFlow.asStateFlow()
 
@@ -19,10 +19,10 @@ class MviModel<State>(val scope: CoroutineScope, initialState: State) {
 /**
  * Typically a ViewModel implements this interface
  */
-interface MviModelHost<State> {
+interface MviModelHost<State : Any> {
     val model: MviModel<State>
 
-    fun <State> MviModelHost<State>.model(scope: CoroutineScope, initialState: State) =
+    fun <State : Any> MviModelHost<State>.model(scope: CoroutineScope, initialState: State) =
         MviModel(scope, initialState)
 
     /**
