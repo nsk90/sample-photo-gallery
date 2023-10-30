@@ -22,6 +22,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -29,7 +30,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
@@ -39,9 +41,12 @@ import ru.nsk.samplephotogallery.R
 import ru.nsk.samplephotogallery.ui.theme.SamplePhotoGalleryTheme
 
 @Composable
-fun MainComposableView(viewModel: IMainViewModel, modifier: Modifier = Modifier, askPermissions: Boolean = true) {
+fun MainComposableView(
+    navController: NavController,
+    viewModel: IMainViewModel = MainViewModel(LocalContext.current),
+    modifier: Modifier = Modifier, askPermissions: Boolean = true
+) {
     val state by viewModel.model.stateFlow.collectAsStateWithLifecycle()
-    val navController = rememberNavController()
 
     Column(modifier = modifier) {
         Text(
@@ -68,7 +73,7 @@ fun MainComposableView(viewModel: IMainViewModel, modifier: Modifier = Modifier,
                 modifier = Modifier
                     .offset((20).dp, (-20).dp)
                     .size(Dp(100F))
-                    .clickable { viewModel.onPreviewClicked() }
+                    .clickable { navController.navigate(Deeplink.GALLERY.value) }
             )
         }
         TakePictureButton(
@@ -82,7 +87,7 @@ fun MainComposableView(viewModel: IMainViewModel, modifier: Modifier = Modifier,
 }
 
 @Composable
-fun TakePictureButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun TakePictureButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
     Button(
         onClick = onClick,
         modifier = modifier,
@@ -94,7 +99,7 @@ fun TakePictureButton(modifier: Modifier = Modifier, onClick: () -> Unit) {
 }
 
 @Composable
-fun CameraPreview(modifier: Modifier = Modifier, onPreviewInflated: (PreviewView) -> Unit) {
+private fun CameraPreview(modifier: Modifier = Modifier, onPreviewInflated: (PreviewView) -> Unit) {
     AndroidView(
         factory = { context ->
             PreviewView(context).apply {
@@ -146,11 +151,11 @@ private fun GreetingPreview() {
     SamplePhotoGalleryTheme {
         Surface(modifier = Modifier/*.fillMaxSize()*/, color = MaterialTheme.colorScheme.background) {
             MainComposableView(
+                NavHostController(LocalContext.current),
                 object : IMainViewModel {
                     override val model = model(GlobalScope, MainState(42))
                     override fun takePicture() = Unit
                     override fun onPreviewInflated(view: PreviewView) = Unit
-                    override fun onPreviewClicked() = Unit
                 },
                 askPermissions = false,
             )

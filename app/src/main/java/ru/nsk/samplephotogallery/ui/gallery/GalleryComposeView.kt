@@ -10,13 +10,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.GlobalScope
 
 @Composable
-fun GalleryComposeView(viewModel: IGalleryViewModel, modifier: Modifier = Modifier) {
+fun GalleryComposeView(
+    viewModel: IGalleryViewModel = GalleryViewModel(LocalContext.current),
+    modifier: Modifier = Modifier
+) {
     val state by viewModel.model.stateFlow.collectAsStateWithLifecycle()
 
     LazyVerticalGrid(
@@ -30,7 +34,7 @@ fun GalleryComposeView(viewModel: IGalleryViewModel, modifier: Modifier = Modifi
 }
 
 @Composable
-fun PhotoItem(photo: Photo, onClick: () -> Unit) {
+private fun PhotoItem(photo: Photo, onClick: () -> Unit) {
     Image(
         painter = BitmapPainter(image = ImageBitmap(10, 10)),//fixme ?
         contentDescription = photo.id,
@@ -40,7 +44,7 @@ fun PhotoItem(photo: Photo, onClick: () -> Unit) {
 
 @Preview
 @Composable
-fun GalleryComposePreview() {
+private fun GalleryComposePreview() {
     GalleryComposeView(
         object : IGalleryViewModel {
             override val model = model(GlobalScope, GalleryState(emptyList()))

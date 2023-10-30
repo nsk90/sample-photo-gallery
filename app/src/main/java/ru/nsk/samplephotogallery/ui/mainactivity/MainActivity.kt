@@ -11,6 +11,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.compose.rememberNavController
 import ru.nsk.samplephotogallery.ui.theme.SamplePhotoGalleryTheme
 
 /** TODO Use DI framework instead */
@@ -30,7 +31,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             SamplePhotoGalleryTheme {
                 Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    MainComposableView(viewModel)
+                    MainNavigation(viewModel)
                 }
             }
         }

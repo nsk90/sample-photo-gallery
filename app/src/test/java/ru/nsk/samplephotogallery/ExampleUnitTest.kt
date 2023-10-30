@@ -9,6 +9,7 @@ import org.junit.Assert.*
  *
  * See [testing documentation](http://d.android.com/tools/testing).
  */
+// TODO implement test for business logic classes in real app
 class ExampleUnitTest {
     @Test
     fun addition_isCorrect() {

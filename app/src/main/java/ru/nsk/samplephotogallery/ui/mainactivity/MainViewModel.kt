@@ -25,7 +25,6 @@ data class MainState(val preview: Int)
 interface IMainViewModel : MviModelHost<MainState> {
     fun takePicture()
     fun onPreviewInflated(view: PreviewView)
-    fun onPreviewClicked()
 }
 
 class MainViewModel(context: Context) : IMainViewModel, ViewModel(), DefaultLifecycleObserver {
@@ -45,9 +44,10 @@ class MainViewModel(context: Context) : IMainViewModel, ViewModel(), DefaultLife
             bindToLifecycle(owner)
             cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
             setEnabledUseCases(CameraController.IMAGE_CAPTURE)
-            initializationFuture.addListener({
-                this@apply.toast(context) { "initializationFuture complete" }
-            }, ContextCompat.getMainExecutor(context))
+            initializationFuture.addListener(
+                { this@apply.toast(context) { "initializationFuture complete" } },
+                ContextCompat.getMainExecutor(context)
+            )
         }
     }
 
@@ -69,9 +69,5 @@ class MainViewModel(context: Context) : IMainViewModel, ViewModel(), DefaultLife
     override fun onPreviewInflated(view: PreviewView) {
         view.controller = cameraController
         log { "onPreviewInflated" }
-    }
-
-    override fun onPreviewClicked() {
-        // todo
     }
 }
