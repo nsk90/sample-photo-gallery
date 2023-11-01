@@ -7,4 +7,5 @@
     <string name="please_grant_camera_permission_rationale">Please grant camera permission.</string>
     <string name="camera_permission_required">Camera permission required for this feature to be available</string>
     <string name="request_camera_permission">Request camera permission</string>
+    <string name="full_photo">Full photo</string>
 </resources>

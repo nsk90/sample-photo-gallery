@@ -11,7 +11,7 @@ class MviModel<State : Any>(val scope: CoroutineScope, initialState: State) {
     private val _stateFlow = MutableStateFlow(initialState)
     val stateFlow = _stateFlow.asStateFlow()
 
-    fun state(block: State.() -> State) {
+    suspend fun state(block: suspend State.() -> State) {
         _stateFlow.value = _stateFlow.value.block()
     }
 }

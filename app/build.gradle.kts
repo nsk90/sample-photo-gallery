@@ -64,6 +64,7 @@ dependencies {
     implementation(libs.androidx.camera.extensions)
     implementation(libs.androidx.compose.navigation)
     implementation(libs.google.accompanist.permissions)
+    implementation(libs.coil.compose)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.espresso.core)

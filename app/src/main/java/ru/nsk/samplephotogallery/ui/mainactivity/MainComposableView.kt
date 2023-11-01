@@ -2,6 +2,7 @@ package ru.nsk.samplephotogallery.ui.mainactivity
 
 import android.content.res.Configuration
 import android.graphics.Color.GREEN
+import android.os.Build.*
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.LinearLayout
 import androidx.camera.view.PreviewView
@@ -32,19 +33,19 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.isGranted
-import com.google.accompanist.permissions.rememberPermissionState
-import com.google.accompanist.permissions.shouldShowRationale
+import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.GlobalScope
 import ru.nsk.samplephotogallery.R
 import ru.nsk.samplephotogallery.ui.theme.SamplePhotoGalleryTheme
 
 @Composable
 fun MainComposableView(
-    navController: NavController,
+    modifier: Modifier = Modifier,
+    navController: NavController = rememberNavController(),
     viewModel: IMainViewModel = MainViewModel(LocalContext.current),
-    modifier: Modifier = Modifier, askPermissions: Boolean = true
+    askPermissions: Boolean = true,
 ) {
     val state by viewModel.model.stateFlow.collectAsStateWithLifecycle()
 
@@ -73,7 +74,7 @@ fun MainComposableView(
                 modifier = Modifier
                     .offset((20).dp, (-20).dp)
                     .size(Dp(100F))
-                    .clickable { navController.navigate(Deeplink.GALLERY.value) }
+                    .clickable { navController.navigate(Deeplink.GALLERY.name) }
             )
         }
         TakePictureButton(
@@ -116,21 +117,25 @@ private fun CameraPreview(modifier: Modifier = Modifier, onPreviewInflated: (Pre
 @OptIn(ExperimentalPermissionsApi::class)
 @Composable
 private fun CameraPermission(modifier: Modifier = Modifier) {
-    val cameraPermissionState = rememberPermissionState(
-        android.Manifest.permission.CAMERA,
-    )
+    val permissions = buildList {
+        add(android.Manifest.permission.CAMERA)
+        if (VERSION.SDK_INT <= VERSION_CODES.Q)
+            add(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+    }
 
-    if (cameraPermissionState.status.isGranted) {
+    val cameraPermissionState = rememberMultiplePermissionsState(permissions)
+
+    if (cameraPermissionState.allPermissionsGranted) {
         Text(stringResource(R.string.camera_permission_granted), modifier)
     } else {
         Column(modifier) {
-            val text = if (cameraPermissionState.status.shouldShowRationale) {
+            val text = if (cameraPermissionState.shouldShowRationale) {
                 stringResource(R.string.please_grant_camera_permission_rationale)
             } else {
                 stringResource(R.string.camera_permission_required)
             }
             Text(text)
-            Button(onClick = { cameraPermissionState.launchPermissionRequest() }) {
+            Button(onClick = { cameraPermissionState.launchMultiplePermissionRequest() }) {
                 Text(stringResource(R.string.request_camera_permission))
             }
         }
@@ -151,8 +156,8 @@ private fun GreetingPreview() {
     SamplePhotoGalleryTheme {
         Surface(modifier = Modifier/*.fillMaxSize()*/, color = MaterialTheme.colorScheme.background) {
             MainComposableView(
-                NavHostController(LocalContext.current),
-                object : IMainViewModel {
+                navController = NavHostController(LocalContext.current),
+                viewModel = object : IMainViewModel {
                     override val model = model(GlobalScope, MainState(42))
                     override fun takePicture() = Unit
                     override fun onPreviewInflated(view: PreviewView) = Unit

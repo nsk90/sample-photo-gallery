@@ -1,12 +1,14 @@
 package ru.nsk.samplephotogallery.ui.mainactivity
 
 import android.annotation.SuppressLint
+import android.content.ContentValues
 import android.content.Context
+import android.provider.MediaStore
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
+import androidx.camera.core.ImageCapture.OutputFileResults
 import androidx.camera.core.ImageCaptureException
-import androidx.camera.core.ImageProxy
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
@@ -16,9 +18,12 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ru.nsk.samplephotogallery.architecture.mvi.MviModelHost
+import ru.nsk.samplephotogallery.tools.log.MediaStoreUtils
 import ru.nsk.samplephotogallery.tools.log.log
 import ru.nsk.samplephotogallery.tools.log.toast
 import ru.nsk.samplephotogallery.tools.log.toastException
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 data class MainState(val preview: Int)
 
@@ -52,11 +57,24 @@ class MainViewModel(context: Context) : IMainViewModel, ViewModel(), DefaultLife
     }
 
     override fun takePicture() = intent {
+        val storePath = MediaStoreUtils(context).mediaStoreCollection.toString()
+        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss_SSS")
+        val name = formatter.format(LocalDateTime.now()) + System.currentTimeMillis().toString()
+        log { "storePath $storePath, name: $name" }
+
+        val contentValues = ContentValues()
+        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+
         cameraController.takePicture(
+            ImageCapture.OutputFileOptions.Builder(
+                context.contentResolver,
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                contentValues
+            ).build(),
             ContextCompat.getMainExecutor(context),
-            object : ImageCapture.OnImageCapturedCallback() {
-                override fun onCaptureSuccess(image: ImageProxy) {
-                    toast(context) { "Photo capture succeeded: $image" }
+            object : ImageCapture.OnImageSavedCallback {
+                override fun onImageSaved(outputFileResults: OutputFileResults) {
+                    toast(context) { "Photo capture succeeded: $outputFileResults" }
                 }
 
                 override fun onError(exception: ImageCaptureException) {
