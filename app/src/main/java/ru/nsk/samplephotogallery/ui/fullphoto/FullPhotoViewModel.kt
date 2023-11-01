@@ -9,6 +9,6 @@ import ru.nsk.samplephotogallery.architecture.mvi.MviModelHost
 data class FullPhotoState(val photoUri: Uri)
 interface IFullPhotoViewModel : MviModelHost<FullPhotoState>
 
-class FullPhotoViewModel(context: Context) : IFullPhotoViewModel, ViewModel() {
-    override val model = model(viewModelScope, FullPhotoState(Uri.EMPTY))
+class FullPhotoViewModel(context: Context, photoUri: Uri) : IFullPhotoViewModel, ViewModel() {
+    override val model = model(viewModelScope, FullPhotoState(photoUri))
 }

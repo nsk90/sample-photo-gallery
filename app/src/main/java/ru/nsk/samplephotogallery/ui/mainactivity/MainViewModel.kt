@@ -18,7 +18,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ru.nsk.samplephotogallery.architecture.mvi.MviModelHost
-import ru.nsk.samplephotogallery.tools.log.MediaStoreUtils
+import ru.nsk.samplephotogallery.tools.MediaStoreUtils
 import ru.nsk.samplephotogallery.tools.log.log
 import ru.nsk.samplephotogallery.tools.log.toast
 import ru.nsk.samplephotogallery.tools.log.toastException

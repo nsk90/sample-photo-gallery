@@ -11,7 +11,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.navigation.compose.rememberNavController
 import ru.nsk.samplephotogallery.ui.theme.SamplePhotoGalleryTheme
 
 /** TODO Use DI framework instead */

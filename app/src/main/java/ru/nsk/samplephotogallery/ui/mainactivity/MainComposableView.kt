@@ -74,7 +74,7 @@ fun MainComposableView(
                 modifier = Modifier
                     .offset((20).dp, (-20).dp)
                     .size(Dp(100F))
-                    .clickable { navController.navigate(Deeplink.GALLERY.name) }
+                    .clickable { navController.navigate(Deeplink.GALLERY.route) }
             )
         }
         TakePictureButton(

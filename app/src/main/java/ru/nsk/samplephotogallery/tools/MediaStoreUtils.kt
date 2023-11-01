@@ -14,13 +14,12 @@
  * limitations under the License.
  */
 
-package ru.nsk.samplephotogallery.tools.log
+package ru.nsk.samplephotogallery.tools
 
 import android.content.ContentUris
 import android.content.Context
 import android.database.Cursor
 import android.net.Uri
-import android.os.Build
 import android.os.Build.*
 import android.provider.MediaStore
 import androidx.core.net.toUri

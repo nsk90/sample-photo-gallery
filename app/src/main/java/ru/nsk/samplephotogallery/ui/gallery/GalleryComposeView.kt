@@ -2,6 +2,7 @@ package ru.nsk.samplephotogallery.ui.gallery
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -9,6 +10,7 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -17,7 +19,10 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.GlobalScope
+import ru.nsk.samplephotogallery.tools.encoded
 import ru.nsk.samplephotogallery.ui.mainactivity.Deeplink
+
+private val itemSize = 120.dp
 
 @Composable
 fun GalleryComposeView(
@@ -28,23 +33,25 @@ fun GalleryComposeView(
     val state by viewModel.model.stateFlow.collectAsStateWithLifecycle()
 
     LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 128.dp),
+        columns = GridCells.Adaptive(minSize = itemSize),
         modifier = modifier,
     ) {
         items(state.photos) { photo ->
-            PhotoItem(photo) { navController.navigate(Deeplink.FULL_PHOTO.name) }
+            PhotoItem(photo) { navController.navigate("${Deeplink.FULL_PHOTO.path}/${photo.file.uri.encoded()}") }
         }
     }
 }
 
 @Composable
-private fun PhotoItem(photo: Photo, modifier: Modifier = Modifier, onClick: () -> Unit) {
+private fun PhotoItem(photo: Photo, modifier: Modifier = Modifier, onClick: (Photo) -> Unit) {
     Image(
         painter = rememberAsyncImagePainter(model = photo.file.uri),
         contentDescription = photo.file.id.toString(),
+        contentScale = ContentScale.FillBounds,
         modifier = modifier
-            .clickable(onClick = onClick)
-            .size(50.dp)
+            .fillMaxSize()
+            .size(itemSize)
+            .clickable(onClick = { onClick(photo) })
     )
 }
 
