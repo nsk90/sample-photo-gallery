@@ -2,6 +2,7 @@ package ru.nsk.samplephotogallery.ui.mainactivity
 
 import android.content.res.Configuration
 import android.graphics.Color.GREEN
+import android.net.Uri
 import android.os.Build.*
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.LinearLayout
@@ -23,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -34,6 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.rememberAsyncImagePainter
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberMultiplePermissionsState
 import kotlinx.coroutines.GlobalScope
@@ -69,11 +72,12 @@ fun MainComposableView(
                 viewModel.onPreviewInflated(it)
             }
             Image(
-                painter = painterResource(id = R.drawable.ic_launcher_background),
+                painter = rememberAsyncImagePainter(state.preview),
                 contentDescription = stringResource(R.string.preview),
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .offset((20).dp, (-20).dp)
-                    .size(Dp(100F))
+                    .offset(20.dp, (-20).dp)
+                    .size(100F.dp)
                     .clickable { navController.navigate(Deeplink.GALLERY.route) }
             )
         }
@@ -158,7 +162,7 @@ private fun GreetingPreview() {
             MainComposableView(
                 navController = NavHostController(LocalContext.current),
                 viewModel = object : IMainViewModel {
-                    override val model = model(GlobalScope, MainState(42))
+                    override val model = model(GlobalScope, MainState(Uri.EMPTY))
                     override fun takePicture() = Unit
                     override fun onPreviewInflated(view: PreviewView) = Unit
                 },

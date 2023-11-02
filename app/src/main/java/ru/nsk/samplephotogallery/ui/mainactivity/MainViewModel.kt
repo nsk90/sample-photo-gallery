@@ -3,6 +3,7 @@ package ru.nsk.samplephotogallery.ui.mainactivity
 import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
+import android.net.Uri
 import android.provider.MediaStore
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
@@ -12,6 +13,7 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -25,7 +27,7 @@ import ru.nsk.samplephotogallery.tools.log.toastException
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-data class MainState(val preview: Int)
+data class MainState(val preview: Uri)
 
 interface IMainViewModel : MviModelHost<MainState> {
     fun takePicture()
@@ -33,15 +35,19 @@ interface IMainViewModel : MviModelHost<MainState> {
 }
 
 class MainViewModel(context: Context) : IMainViewModel, ViewModel(), DefaultLifecycleObserver {
-    override val model = model(viewModelScope, MainState(preview = 42))
+    override val model = model(viewModelScope, MainState(preview = Uri.EMPTY))
 
     @SuppressLint("StaticFieldLeak")
     private val context = context.applicationContext
     private val cameraController = LifecycleCameraController(context.applicationContext)
 
     init {
-        log { "init" }
         ActivityResultContracts.RequestPermission()
+        intent {
+            state {
+                copy(preview = Uri.parse(MediaStoreUtils(context).getLatestImageFilename()))
+            }
+        }
     }
 
     override fun onCreate(owner: LifecycleOwner) {
