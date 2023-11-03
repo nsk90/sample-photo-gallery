@@ -7,6 +7,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
+import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.Orientation.Horizontal
 import androidx.compose.foundation.gestures.Orientation.Vertical
 import androidx.compose.foundation.gestures.anchoredDraggable
@@ -23,10 +24,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -34,8 +37,10 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import ru.nsk.samplephotogallery.R
-import ru.nsk.samplephotogallery.tools.log.log
+import kotlin.math.abs
 import kotlin.math.roundToInt
+
+private const val INITIAL_SCALE = 1f
 
 @Composable
 fun FullPhotoComposeView(
@@ -55,8 +60,6 @@ fun FullPhotoComposeView(
     )
 }
 
-private const val INITIAL_SCALE = 1f
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun Photo(
@@ -65,12 +68,19 @@ private fun Photo(
     onHorizontallyDragged: () -> Unit,
     onVerticallyDragged: () -> Unit
 ) {
+    var size by remember { mutableStateOf(IntSize.Zero) }
     var scale by remember { mutableFloatStateOf(INITIAL_SCALE) }
     var offset by remember { mutableStateOf(Offset.Zero) }
     val transformableState = rememberTransformableState(
-        onTransformation = { zoomChange, offsetChange, _ ->
-            scale = maxOf(scale * zoomChange, 1f)
-            offset += offsetChange
+        onTransformation = { zoomChange, panChange, _ ->
+            scale = (scale * zoomChange).coerceIn(1f, 3f)
+
+            val maxOffsetX = abs((size.width - (size.width * scale)) / 2)
+            val maxOffsetY = abs((size.height - (size.height * scale)) / 2)
+            offset = Offset(
+                (offset.x + panChange.x).coerceIn(-maxOffsetX, maxOffsetX),
+                (offset.y + panChange.y).coerceIn(-maxOffsetY, maxOffsetY)
+            )
         }
     )
     val density = LocalDensity.current
@@ -105,7 +115,6 @@ private fun Photo(
             velocityThreshold = { Float.MAX_VALUE },
             animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
         ) {
-            1.log { "draggableVerticalState $it"}
             if (it in listOf(DragValue.Start, DragValue.End))
                 onVerticallyDragged()
             true
@@ -116,6 +125,7 @@ private fun Photo(
         painter = rememberAsyncImagePainter(model = photoUri),
         contentDescription = stringResource(R.string.full_photo),
         modifier = modifier
+            .onSizeChanged { size = it }
             .transformable(transformableState)
             .anchoredDraggable(draggableHorizontalState, Horizontal, enabled = scale == INITIAL_SCALE)
             .anchoredDraggable(draggableVerticalState, Vertical, enabled = scale == INITIAL_SCALE)
@@ -123,7 +133,7 @@ private fun Photo(
                 scaleX = scale,
                 scaleY = scale,
                 translationX = offset.x,
-                translationY = offset.y
+                translationY = offset.y,
             )
             .offset {
                 IntOffset(
