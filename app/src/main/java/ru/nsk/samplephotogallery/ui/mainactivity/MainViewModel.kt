@@ -13,11 +13,11 @@ import androidx.camera.core.ImageCaptureException
 import androidx.camera.view.CameraController
 import androidx.camera.view.LifecycleCameraController
 import androidx.camera.view.PreviewView
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import ru.nsk.samplephotogallery.architecture.mvi.MviModelHost
 import ru.nsk.samplephotogallery.tools.MediaStoreUtils
@@ -26,6 +26,14 @@ import ru.nsk.samplephotogallery.tools.log.toast
 import ru.nsk.samplephotogallery.tools.log.toastException
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+
+/** TODO Use DI framework instead */
+class MainViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        @Suppress("UNCHECKED_CAST")
+        return MainViewModel(context) as T
+    }
+}
 
 data class MainState(val preview: Uri)
 
@@ -42,9 +50,11 @@ class MainViewModel(context: Context) : IMainViewModel, ViewModel(), DefaultLife
     private val cameraController = LifecycleCameraController(context.applicationContext)
 
     init {
+        log { "init" }
         ActivityResultContracts.RequestPermission()
         intent {
             state {
+                // fixme preview should be updated when new photos are made
                 copy(preview = Uri.parse(MediaStoreUtils(context).getLatestImageFilename()))
             }
         }

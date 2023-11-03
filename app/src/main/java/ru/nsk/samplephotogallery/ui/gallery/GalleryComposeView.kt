@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
@@ -28,7 +29,7 @@ private val itemSize = 120.dp
 fun GalleryComposeView(
     modifier: Modifier = Modifier,
     navController: NavController = rememberNavController(),
-    viewModel: IGalleryViewModel = GalleryViewModel(LocalContext.current),
+    viewModel: IGalleryViewModel = viewModel(factory = GalleryViewModelFactory(LocalContext.current)),
 ) {
     val state by viewModel.model.stateFlow.collectAsStateWithLifecycle()
 

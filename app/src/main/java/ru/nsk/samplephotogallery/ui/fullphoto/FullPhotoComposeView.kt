@@ -1,7 +1,6 @@
 package ru.nsk.samplephotogallery.ui.fullphoto
 
 import android.net.Uri
-import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -30,10 +29,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import ru.nsk.samplephotogallery.R
+import ru.nsk.samplephotogallery.tools.log.log
 import kotlin.math.roundToInt
 
 @Composable
@@ -41,14 +42,16 @@ fun FullPhotoComposeView(
     photoUri: Uri,
     modifier: Modifier = Modifier,
     navController: NavController = rememberNavController(),
-    viewModel: IFullPhotoViewModel = FullPhotoViewModel(LocalContext.current, photoUri),
+    viewModel: IFullPhotoViewModel = viewModel(factory = FullPhotoViewModelFactory(LocalContext.current, photoUri)),
 ) {
     val state by viewModel.model.stateFlow.collectAsStateWithLifecycle()
     Photo(
         photoUri = state.photoUri,
         modifier = modifier.fillMaxSize(),
-        onHorizontallyDragged = { /*todo*/},
-        onVerticallyDragged = { navController.navigateUp() },
+        onHorizontallyDragged = { /*todo*/ },
+        onVerticallyDragged = {
+            navController.navigateUp()
+        },
     )
 }
 
@@ -88,7 +91,11 @@ private fun Photo(
             positionalThreshold = { distance -> distance * 0.5f },
             velocityThreshold = { with(density) { 300.dp.toPx() } },
             animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
-        )
+        ) {
+            if (it in listOf(DragValue.Start, DragValue.End))
+                onHorizontallyDragged()
+            true
+        }
     }
     val draggableVerticalState = remember {
         AnchoredDraggableState(
@@ -97,12 +104,13 @@ private fun Photo(
             positionalThreshold = { distance -> distance * 0.8f },
             velocityThreshold = { Float.MAX_VALUE },
             animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
-        )
+        ) {
+            1.log { "draggableVerticalState $it"}
+            if (it in listOf(DragValue.Start, DragValue.End))
+                onVerticallyDragged()
+            true
+        }
     }
-    if (draggableHorizontalState.currentValue in listOf(DragValue.Start, DragValue.End))
-        onHorizontallyDragged()
-    if (draggableVerticalState.currentValue in listOf(DragValue.Start, DragValue.End))
-        onVerticallyDragged()
 
     Image(
         painter = rememberAsyncImagePainter(model = photoUri),
@@ -127,7 +135,7 @@ private fun Photo(
                         .roundToInt(),
                 )
             }
-        )
+    )
 }
 
 enum class DragValue { Start, Center, End }

@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -24,15 +25,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -47,7 +48,7 @@ import ru.nsk.samplephotogallery.ui.theme.SamplePhotoGalleryTheme
 fun MainComposableView(
     modifier: Modifier = Modifier,
     navController: NavController = rememberNavController(),
-    viewModel: IMainViewModel = MainViewModel(LocalContext.current),
+    viewModel: IMainViewModel = viewModel(factory = MainViewModelFactory(LocalContext.current)),
     askPermissions: Boolean = true,
 ) {
     val state by viewModel.model.stateFlow.collectAsStateWithLifecycle()
@@ -78,6 +79,7 @@ fun MainComposableView(
                 modifier = Modifier
                     .offset(20.dp, (-20).dp)
                     .size(100F.dp)
+                    .clip(CircleShape)
                     .clickable { navController.navigate(Deeplink.GALLERY.route) }
             )
         }
