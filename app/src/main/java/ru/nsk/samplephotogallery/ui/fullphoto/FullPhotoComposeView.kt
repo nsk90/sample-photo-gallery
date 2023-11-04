@@ -7,23 +7,31 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.AnchoredDraggableState
 import androidx.compose.foundation.gestures.DraggableAnchors
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.Orientation.Horizontal
 import androidx.compose.foundation.gestures.Orientation.Vertical
 import androidx.compose.foundation.gestures.anchoredDraggable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -41,7 +49,11 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 private const val INITIAL_SCALE = 1f
+private const val INITIAL_TAPPED_SCALE = 1.7f
 
+private enum class DragValue { Start, Center, End }
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FullPhotoComposeView(
     photoUri: Uri,
@@ -50,14 +62,39 @@ fun FullPhotoComposeView(
     viewModel: IFullPhotoViewModel = viewModel(factory = FullPhotoViewModelFactory(LocalContext.current, photoUri)),
 ) {
     val state by viewModel.model.stateFlow.collectAsStateWithLifecycle()
-    Photo(
-        photoUri = state.photoUri,
-        modifier = modifier.fillMaxSize(),
-        onHorizontallyDragged = { /*todo*/ },
-        onVerticallyDragged = {
-            navController.navigateUp()
-        },
-    )
+
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.BottomStart
+    ) {
+        val pages = listOf(photoUri, photoUri, photoUri, photoUri, photoUri)
+        val pagerState = rememberPagerState { pages.size }
+
+        HorizontalPager(
+            state = pagerState,
+            verticalAlignment = Alignment.CenterVertically,
+        ) { index ->
+//            AsyncImage(
+//                model = Builder(LocalContext.current)
+//                    .data(sliderList[page])
+//                    .crossfade(true)
+//                    .scale(Scale.FILL)
+//                    .build(),
+//                contentDescription = null,
+//            )
+            Photo(
+                photoUri = pages[index],
+                modifier = Modifier.fillMaxSize(),
+                onVerticallyDragged = {
+                    navController.navigateUp()
+                },
+            )
+        }
+        Column {
+            TextButton(stringResource(R.string.view_in_gallery_app)) { viewModel.viewInGalleryApp() }
+            TextButton(stringResource(R.string.save_to_album)) { viewModel.saveToAlbum() }
+        }
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -65,15 +102,16 @@ fun FullPhotoComposeView(
 private fun Photo(
     photoUri: Uri,
     modifier: Modifier = Modifier,
-    onHorizontallyDragged: () -> Unit,
     onVerticallyDragged: () -> Unit
 ) {
+    var zoomed by remember { mutableStateOf(false) }
     var size by remember { mutableStateOf(IntSize.Zero) }
     var scale by remember { mutableFloatStateOf(INITIAL_SCALE) }
     var offset by remember { mutableStateOf(Offset.Zero) }
     val transformableState = rememberTransformableState(
         onTransformation = { zoomChange, panChange, _ ->
             scale = (scale * zoomChange).coerceIn(1f, 3f)
+            if (scale == 1f) zoomed = false
 
             val maxOffsetX = abs((size.width - (size.width * scale)) / 2)
             val maxOffsetY = abs((size.height - (size.height * scale)) / 2)
@@ -94,19 +132,7 @@ private fun Photo(
         }
     }
 
-    val draggableHorizontalState = remember {
-        AnchoredDraggableState(
-            DragValue.Center,
-            anchors = anchors,
-            positionalThreshold = { distance -> distance * 0.5f },
-            velocityThreshold = { with(density) { 300.dp.toPx() } },
-            animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
-        ) {
-            if (it in listOf(DragValue.Start, DragValue.End))
-                onHorizontallyDragged()
-            true
-        }
-    }
+    var wasDragged by remember { mutableStateOf(false) }
     val draggableVerticalState = remember {
         AnchoredDraggableState(
             DragValue.Center,
@@ -115,8 +141,10 @@ private fun Photo(
             velocityThreshold = { Float.MAX_VALUE },
             animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing),
         ) {
-            if (it in listOf(DragValue.Start, DragValue.End))
+            if (it in listOf(DragValue.Start, DragValue.End) && !wasDragged) {
+                wasDragged = true
                 onVerticallyDragged()
+            }
             true
         }
     }
@@ -126,8 +154,20 @@ private fun Photo(
         contentDescription = stringResource(R.string.full_photo),
         modifier = modifier
             .onSizeChanged { size = it }
-            .transformable(transformableState)
-            .anchoredDraggable(draggableHorizontalState, Horizontal, enabled = scale == INITIAL_SCALE)
+            .transformable(transformableState, enabled = zoomed)
+            .pointerInput(Unit) {
+                detectTapGestures(
+                    onDoubleTap = {
+                        zoomed = !zoomed
+                        scale = if (zoomed) {
+                            INITIAL_TAPPED_SCALE
+                        } else {
+                            offset = Offset.Zero
+                            INITIAL_SCALE
+                        }
+                    }
+                )
+            }
             .anchoredDraggable(draggableVerticalState, Vertical, enabled = scale == INITIAL_SCALE)
             .graphicsLayer(
                 scaleX = scale,
@@ -137,9 +177,7 @@ private fun Photo(
             )
             .offset {
                 IntOffset(
-                    x = draggableHorizontalState
-                        .requireOffset()
-                        .roundToInt(),
+                    x = 0,
                     y = draggableVerticalState
                         .requireOffset()
                         .roundToInt(),
@@ -148,4 +186,12 @@ private fun Photo(
     )
 }
 
-enum class DragValue { Start, Center, End }
+@Composable
+private fun TextButton(text: String, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Text(text = text)
+    }
+}

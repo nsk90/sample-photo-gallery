@@ -8,4 +8,6 @@
     <string name="camera_permission_required">Camera permission required for this feature to be available</string>
     <string name="request_camera_permission">Request camera permission</string>
     <string name="full_photo">Full photo</string>
+    <string name="view_in_gallery_app">View in gallery App</string>
+    <string name="save_to_album">Save to album</string>
 </resources>

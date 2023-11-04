@@ -1,13 +1,16 @@
 package ru.nsk.samplephotogallery.ui.fullphoto
 
+import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
+import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import ru.nsk.samplephotogallery.architecture.mvi.MviModelHost
 import ru.nsk.samplephotogallery.tools.log.log
-import ru.nsk.samplephotogallery.ui.gallery.GalleryViewModel
+import ru.nsk.samplephotogallery.tools.log.toastException
 
 /** TODO Use DI framework instead */
 class FullPhotoViewModelFactory(private val context: Context, private val photoUri: Uri) : ViewModelProvider.Factory {
@@ -16,13 +19,28 @@ class FullPhotoViewModelFactory(private val context: Context, private val photoU
         return FullPhotoViewModel(context, photoUri) as T
     }
 }
-data class FullPhotoState(val photoUri: Uri)
-interface IFullPhotoViewModel : MviModelHost<FullPhotoState>
 
-class FullPhotoViewModel(context: Context, photoUri: Uri) : IFullPhotoViewModel, ViewModel() {
+data class FullPhotoState(val photoUri: Uri)
+interface IFullPhotoViewModel : MviModelHost<FullPhotoState> {
+    fun viewInGalleryApp()
+    fun saveToAlbum()
+}
+
+class FullPhotoViewModel(context: Context, private val photoUri: Uri) : IFullPhotoViewModel, ViewModel() {
     override val model = model(viewModelScope, FullPhotoState(photoUri))
 
-    init {
-        log {"init"}
+    @SuppressLint("StaticFieldLeak")
+    private val context = context.applicationContext
+
+    override fun viewInGalleryApp() {
+        try {
+            log { "photoUri $photoUri" }
+            startActivity(context, Intent(Intent.ACTION_VIEW, photoUri).setType("image/*"), null)
+        } catch (e: Exception) {
+            toastException(context, e) { "Can not view picture in a gallery app $photoUri" }
+        }
+    }
+
+    override fun saveToAlbum() {
     }
 }

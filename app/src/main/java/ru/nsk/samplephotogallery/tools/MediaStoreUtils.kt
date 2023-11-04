@@ -45,16 +45,19 @@ class MediaStoreUtils(private val context: Context) {
     }
 
     private suspend fun getMediaStoreImageCursor(mediaStoreCollection: Uri): Cursor? {
-        var cursor: Cursor?
-        withContext(Dispatchers.IO) {
+        return withContext(Dispatchers.IO) {
             val projection = arrayOf(imageDataColumnIndex, imageIdColumnIndex)
             val sortOrder = "DATE_ADDED DESC"
-            cursor = context.contentResolver.query(
+            context.contentResolver.query(
                 mediaStoreCollection, projection, null, null, sortOrder
             )
         }
-        return cursor
     }
+
+    suspend fun insert(uri: Uri) {
+        //context.contentResolver.insert()
+    }
+
 
     suspend fun getLatestImageFilename(): String? {
         var filename: String?
