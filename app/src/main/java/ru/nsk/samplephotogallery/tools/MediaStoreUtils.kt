@@ -17,15 +17,18 @@
 package ru.nsk.samplephotogallery.tools
 
 import android.content.ContentUris
+import android.content.ContentValues
 import android.content.Context
 import android.database.Cursor
 import android.net.Uri
 import android.os.Build.*
-import android.provider.MediaStore
+import android.provider.MediaStore.Images
 import androidx.core.net.toUri
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+
+private const val ALBUM_NAME = "samplePhotoGallery"
 
 /**
  * A utility class for accessing this app's photo storage.
@@ -39,7 +42,7 @@ import java.io.File
 class MediaStoreUtils(private val context: Context) {
 
     val mediaStoreCollection: Uri? = if (VERSION.SDK_INT >= VERSION_CODES.Q) {
-        MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
+        Images.Media.EXTERNAL_CONTENT_URI
     } else {
         context.getExternalFilesDir(null)?.toUri()
     }
@@ -54,10 +57,35 @@ class MediaStoreUtils(private val context: Context) {
         }
     }
 
-    suspend fun insert(uri: Uri) {
-        //context.contentResolver.insert()
-    }
+    /**
+     * Fixme add old android versions support
+     */
+    suspend fun insertFile(uri: Uri) = withContext(Dispatchers.IO) {
+        val values = ContentValues().apply {
+            put(Images.Media.MIME_TYPE, "image/jpeg")
+            // Add the date meta data to ensure the image is added at the front of the gallery
+            val millis = System.currentTimeMillis()
+            put(Images.Media.DATE_ADDED, millis / 1000L)
+            put(Images.Media.DATE_MODIFIED, millis / 1000L)
+            put(Images.Media.DATE_TAKEN, millis)
+            put( Images.Media.BUCKET_DISPLAY_NAME, ALBUM_NAME )
+            put( Images.Media.ALBUM, ALBUM_NAME )
+        }
 
+        val resolver = context.contentResolver
+        resolver.insert(Images.Media.EXTERNAL_CONTENT_URI, values)?.let { insertUri ->
+            try {
+                resolver.openInputStream(uri)!!.buffered().use { inputStream ->
+                    resolver.openOutputStream(insertUri)!!.buffered().use { outputStream ->
+                        inputStream.copyTo(outputStream)
+                    }
+                }
+            } catch (e: Exception) {
+                resolver.delete(insertUri, null, null)
+                throw IllegalStateException("Insert failed", e)
+            }
+        }
+    }
 
     suspend fun getLatestImageFilename(): String? {
         var filename: String?
@@ -83,7 +111,7 @@ class MediaStoreUtils(private val context: Context) {
                 while (cursor.moveToNext()) {
                     val id = cursor.getLong(imageIdColumn)
                     val contentUri: Uri = ContentUris.withAppendedId(
-                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                        Images.Media.EXTERNAL_CONTENT_URI,
                         id
                     )
                     val contentFile = File(cursor.getString(imageDataColumn))
@@ -98,8 +126,8 @@ class MediaStoreUtils(private val context: Context) {
     companion object {
         // Suppress DATA index deprecation warning since we need the file location for the Glide library
         @Suppress("DEPRECATION")
-        private const val imageDataColumnIndex = MediaStore.Images.Media.DATA
-        private const val imageIdColumnIndex = MediaStore.Images.Media._ID
+        private const val imageDataColumnIndex = Images.Media.DATA
+        private const val imageIdColumnIndex = Images.Media._ID
     }
 }
 

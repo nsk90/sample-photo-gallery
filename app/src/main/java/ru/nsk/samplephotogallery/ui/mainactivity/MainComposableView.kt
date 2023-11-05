@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -73,8 +74,14 @@ fun MainComposableView(
             CameraPreview(Modifier.matchParentSize()) {
                 viewModel.onPreviewInflated(it)
             }
+
+            val painter = if (state.preview != Uri.EMPTY)
+                rememberAsyncImagePainter(state.preview) 
+            else 
+                painterResource(id = android.R.drawable.ic_menu_gallery)
+
             Image(
-                painter = rememberAsyncImagePainter(state.preview),
+                painter = painter,
                 contentDescription = stringResource(R.string.preview),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier

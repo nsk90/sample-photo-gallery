@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import ru.nsk.samplephotogallery.architecture.mvi.MviModelHost
+import ru.nsk.samplephotogallery.tools.MediaStoreUtils
 import ru.nsk.samplephotogallery.tools.log.log
 import ru.nsk.samplephotogallery.tools.log.toastException
 
@@ -35,12 +36,23 @@ class FullPhotoViewModel(context: Context, private val photoUri: Uri) : IFullPho
     override fun viewInGalleryApp() {
         try {
             log { "photoUri $photoUri" }
-            startActivity(context, Intent(Intent.ACTION_VIEW, photoUri).setType("image/*"), null)
+            startActivity(
+                context,
+                Intent(Intent.ACTION_VIEW)
+                    .setDataAndType(photoUri, "image/*")
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+                null
+            )
         } catch (e: Exception) {
             toastException(context, e) { "Can not view picture in a gallery app $photoUri" }
         }
     }
 
-    override fun saveToAlbum() {
+    override fun saveToAlbum() = intent {
+        try {
+            MediaStoreUtils(context).insertFile(photoUri)
+        } catch (e: Exception) {
+            toastException(context, e) { "Photo insert failed: $e" }
+        }
     }
 }

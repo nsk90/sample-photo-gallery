@@ -4,7 +4,8 @@ import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
-import android.provider.MediaStore
+import android.provider.MediaStore.Images
+import android.provider.MediaStore.MediaColumns
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
@@ -79,12 +80,12 @@ class MainViewModel(context: Context) : IMainViewModel, ViewModel(), DefaultLife
         log { "storePath $storePath, name: $name" }
 
         val contentValues = ContentValues()
-        contentValues.put(MediaStore.MediaColumns.MIME_TYPE, "image/jpeg")
+        contentValues.put(MediaColumns.MIME_TYPE, "image/jpeg")
 
         cameraController.takePicture(
             ImageCapture.OutputFileOptions.Builder(
                 context.contentResolver,
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                Images.Media.EXTERNAL_CONTENT_URI,
                 contentValues
             ).build(),
             ContextCompat.getMainExecutor(context),
