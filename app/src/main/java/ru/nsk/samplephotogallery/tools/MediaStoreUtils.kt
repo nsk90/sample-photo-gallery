@@ -22,6 +22,7 @@ import android.content.Context
 import android.database.Cursor
 import android.net.Uri
 import android.os.Build.*
+import android.os.Environment
 import android.provider.MediaStore.Images
 import androidx.core.net.toUri
 import kotlinx.coroutines.Dispatchers
@@ -68,8 +69,7 @@ class MediaStoreUtils(private val context: Context) {
             put(Images.Media.DATE_ADDED, millis / 1000L)
             put(Images.Media.DATE_MODIFIED, millis / 1000L)
             put(Images.Media.DATE_TAKEN, millis)
-            put( Images.Media.BUCKET_DISPLAY_NAME, ALBUM_NAME )
-            put( Images.Media.ALBUM, ALBUM_NAME )
+            put( Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/$ALBUM_NAME")
         }
 
         val resolver = context.contentResolver
