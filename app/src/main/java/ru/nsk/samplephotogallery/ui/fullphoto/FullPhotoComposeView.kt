@@ -85,7 +85,6 @@ fun FullPhotoComposeView(
             state = pagerState,
             verticalAlignment = Alignment.CenterVertically,
         ) { index ->
-            1.log { "index $index "}
             indexState = index
             Photo(
                 photoUri = state.photos[index].uri,
