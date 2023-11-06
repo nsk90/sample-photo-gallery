@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -45,6 +46,8 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import ru.nsk.samplephotogallery.R
+import ru.nsk.samplephotogallery.application.thisApplication
+import ru.nsk.samplephotogallery.tools.log.log
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -56,10 +59,16 @@ private enum class DragValue { Start, Center, End }
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FullPhotoComposeView(
-    photoUri: Uri,
+    initialPhotoIndex: Int,
     modifier: Modifier = Modifier,
     navController: NavController = rememberNavController(),
-    viewModel: IFullPhotoViewModel = viewModel(factory = FullPhotoViewModelFactory(LocalContext.current, photoUri)),
+    viewModel: IFullPhotoViewModel = viewModel(
+        factory = FullPhotoViewModelFactory(
+            LocalContext.current,
+            LocalContext.current.thisApplication.photoStorage,
+            initialPhotoIndex
+        )
+    ),
 ) {
     val state by viewModel.model.stateFlow.collectAsStateWithLifecycle()
 
@@ -67,23 +76,19 @@ fun FullPhotoComposeView(
         modifier = modifier,
         contentAlignment = Alignment.BottomStart
     ) {
-        val pages = listOf(photoUri, photoUri, photoUri, photoUri, photoUri)
-        val pagerState = rememberPagerState { pages.size }
+        val pagerState = rememberPagerState(initialPage = state.initialIndex) { state.photos.size }
 
+        var indexState by remember {
+            mutableIntStateOf(state.initialIndex)
+        }
         HorizontalPager(
             state = pagerState,
             verticalAlignment = Alignment.CenterVertically,
         ) { index ->
-//            AsyncImage(
-//                model = Builder(LocalContext.current)
-//                    .data(sliderList[page])
-//                    .crossfade(true)
-//                    .scale(Scale.FILL)
-//                    .build(),
-//                contentDescription = null,
-//            )
+            1.log { "index $index "}
+            indexState = index
             Photo(
-                photoUri = pages[index],
+                photoUri = state.photos[index].uri,
                 modifier = Modifier.fillMaxSize(),
                 onVerticallyDragged = {
                     navController.navigateUp()
@@ -91,8 +96,8 @@ fun FullPhotoComposeView(
             )
         }
         Column {
-            TextButton(stringResource(R.string.view_in_gallery_app)) { viewModel.viewInGalleryApp() }
-            TextButton(stringResource(R.string.save_to_album)) { viewModel.saveToAlbum() }
+            TextButton(stringResource(R.string.view_in_gallery_app)) { viewModel.viewInGalleryApp(indexState) }
+            TextButton(stringResource(R.string.save_to_album)) { viewModel.saveToAlbum(indexState) }
         }
     }
 }

@@ -21,12 +21,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import ru.nsk.samplephotogallery.architecture.mvi.MviModelHost
-import ru.nsk.samplephotogallery.tools.MediaStoreUtils
-import ru.nsk.samplephotogallery.tools.log.log
+import ru.nsk.samplephotogallery.domain.MediaStoreUtils
 import ru.nsk.samplephotogallery.tools.log.toast
 import ru.nsk.samplephotogallery.tools.log.toastException
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 /** TODO Use DI framework instead */
 class MainViewModelFactory(private val context: Context) : ViewModelProvider.Factory {
@@ -51,7 +48,6 @@ class MainViewModel(context: Context) : IMainViewModel, ViewModel(), DefaultLife
     private val cameraController = LifecycleCameraController(context.applicationContext)
 
     init {
-        log { "init" }
         ActivityResultContracts.RequestPermission()
         intent {
             state {
@@ -74,11 +70,6 @@ class MainViewModel(context: Context) : IMainViewModel, ViewModel(), DefaultLife
     }
 
     override fun takePicture() = intent {
-        val storePath = MediaStoreUtils(context).mediaStoreCollection.toString()
-        val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss_SSS")
-        val name = formatter.format(LocalDateTime.now()) + System.currentTimeMillis().toString()
-        log { "storePath $storePath, name: $name" }
-
         val contentValues = ContentValues()
         contentValues.put(MediaColumns.MIME_TYPE, "image/jpeg")
 
@@ -103,6 +94,5 @@ class MainViewModel(context: Context) : IMainViewModel, ViewModel(), DefaultLife
 
     override fun onPreviewInflated(view: PreviewView) {
         view.controller = cameraController
-        log { "onPreviewInflated" }
     }
 }

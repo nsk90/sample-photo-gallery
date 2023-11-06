@@ -76,8 +76,8 @@ fun MainComposableView(
             }
 
             val painter = if (state.preview != Uri.EMPTY)
-                rememberAsyncImagePainter(state.preview) 
-            else 
+                rememberAsyncImagePainter(state.preview)
+            else
                 painterResource(id = android.R.drawable.ic_menu_gallery)
 
             Image(

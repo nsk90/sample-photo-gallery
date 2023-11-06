@@ -6,7 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -20,7 +20,8 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import kotlinx.coroutines.GlobalScope
-import ru.nsk.samplephotogallery.tools.encoded
+import ru.nsk.samplephotogallery.application.thisApplication
+import ru.nsk.samplephotogallery.domain.Photo
 import ru.nsk.samplephotogallery.ui.mainactivity.Deeplink
 
 private val itemSize = 120.dp
@@ -29,7 +30,12 @@ private val itemSize = 120.dp
 fun GalleryComposeView(
     modifier: Modifier = Modifier,
     navController: NavController = rememberNavController(),
-    viewModel: IGalleryViewModel = viewModel(factory = GalleryViewModelFactory(LocalContext.current)),
+    viewModel: IGalleryViewModel = viewModel(
+        factory = GalleryViewModelFactory(
+            LocalContext.current,
+            LocalContext.current.thisApplication.photoStorage
+        )
+    ),
 ) {
     val state by viewModel.model.stateFlow.collectAsStateWithLifecycle()
 
@@ -37,8 +43,8 @@ fun GalleryComposeView(
         columns = GridCells.Adaptive(minSize = itemSize),
         modifier = modifier,
     ) {
-        items(state.photos) { photo ->
-            PhotoItem(photo) { navController.navigate("${Deeplink.FULL_PHOTO.path}/${photo.file.uri.encoded()}") }
+        itemsIndexed(state.photos) { index, photo ->
+            PhotoItem(photo) { navController.navigate("${Deeplink.FULL_PHOTO.path}/$index") }
         }
     }
 }
@@ -46,8 +52,8 @@ fun GalleryComposeView(
 @Composable
 private fun PhotoItem(photo: Photo, modifier: Modifier = Modifier, onClick: (Photo) -> Unit) {
     Image(
-        painter = rememberAsyncImagePainter(model = photo.file.uri),
-        contentDescription = photo.file.id.toString(),
+        painter = rememberAsyncImagePainter(model = photo.uri),
+        contentDescription = null,
         contentScale = ContentScale.FillBounds,
         modifier = modifier
             .fillMaxSize()

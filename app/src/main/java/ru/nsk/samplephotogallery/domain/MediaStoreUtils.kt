@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package ru.nsk.samplephotogallery.tools
+package ru.nsk.samplephotogallery.domain
 
 import android.content.ContentUris
 import android.content.ContentValues
@@ -40,6 +40,7 @@ private const val ALBUM_NAME = "samplePhotoGallery"
  * previous instance. You can request further permissions to change this app's access. See this
  * guide for more: https://developer.android.com/training/data-storage.
  */
+// fixme Copy pasted code, make refactoring
 class MediaStoreUtils(private val context: Context) {
 
     val mediaStoreCollection: Uri? = if (VERSION.SDK_INT >= VERSION_CODES.Q) {
@@ -61,7 +62,7 @@ class MediaStoreUtils(private val context: Context) {
     /**
      * Fixme add old android versions support
      */
-    suspend fun insertFile(uri: Uri) = withContext(Dispatchers.IO) {
+    suspend fun insertPictureToAlbum(uri: Uri) = withContext(Dispatchers.IO) {
         val values = ContentValues().apply {
             put(Images.Media.MIME_TYPE, "image/jpeg")
             // Add the date meta data to ensure the image is added at the front of the gallery
@@ -69,7 +70,7 @@ class MediaStoreUtils(private val context: Context) {
             put(Images.Media.DATE_ADDED, millis / 1000L)
             put(Images.Media.DATE_MODIFIED, millis / 1000L)
             put(Images.Media.DATE_TAKEN, millis)
-            put( Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/$ALBUM_NAME")
+            put(Images.Media.RELATIVE_PATH, "${Environment.DIRECTORY_PICTURES}/$ALBUM_NAME")
         }
 
         val resolver = context.contentResolver
