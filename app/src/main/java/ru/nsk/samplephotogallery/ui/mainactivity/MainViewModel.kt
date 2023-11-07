@@ -52,7 +52,7 @@ class MainViewModel(context: Context) : IMainViewModel, ViewModel(), DefaultLife
         intent {
             state {
                 // fixme preview should be updated when new photos are made
-                copy(preview = Uri.parse(MediaStoreUtils(context).getLatestImageFilename()))
+                copy(preview = Uri.parse(MediaStoreUtils(context).getLatestImageFilename().orEmpty()))
             }
         }
     }

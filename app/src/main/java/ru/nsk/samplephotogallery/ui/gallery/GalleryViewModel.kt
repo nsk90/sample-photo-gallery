@@ -27,7 +27,7 @@ class GalleryViewModel(context: Context, photoStorage: PhotoStorage) : IGalleryV
 
     init {
         intent {
-            state { copy(photos = photoStorage.getPhotos().map { Photo(it.uri) }) }
+            state { copy(photos = photoStorage.loadPhotos().map { Photo(it.uri) }) }
         }
     }
 }
